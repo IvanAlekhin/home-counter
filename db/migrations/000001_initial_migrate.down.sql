@@ -1,0 +1,9 @@
+BEGIN;
+
+DROP TABLE IF EXISTS "user" CASCADE;
+
+DROP TABLE IF EXISTS user_tariff;
+
+DROP TABLE IF EXISTS user_meter_data;
+
+COMMIT;
