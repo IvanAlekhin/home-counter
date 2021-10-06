@@ -18,3 +18,5 @@
   cold_water)
 - /user/count-meters (GET) узнаем, сколько должны за коммуналку (параметры electricity, hot_water,
   cold_water)
+
+*Дока по работе с миграциями: https://github.com/golang-migrate/migrate/tree/master/cmd/migrate*

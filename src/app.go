@@ -13,23 +13,23 @@ import (
 	"time"
 )
 
-// TODO обрабатывать ошибки в хендлерах и нормально логгировать
-
-// TODO подумать за нейминг
 // TODO затащить gin
 func App() {
 	defer func() {
 		if err := recover(); err != nil {
 			if err == config.ErrorConfig {
 				log.Printf("Config error")
-				App()
 			} else {
 				log.Printf("Panic happened. %s. Recovering server", err)
 				App()
 			}
 		}
 	}()
-	defer models.DB.Close()
+
+	defer func() {
+		models.DB.Close()
+		log.Printf("DB connections closed")
+	}()
 
 	authRouter := httprouter.New()
 	authRouter.GET("/auth/callback", handlers.CallbackHandler)

@@ -31,10 +31,10 @@ func saveNewUser(userId string, userName string) {
 		case "sql: no rows in result set":
 			_, err := models.DB.Exec(`INSERT INTO "user" (id, name) VALUES ($1, $2)`, userId, userName)
 			if err != nil {
-				log.Fatal(err)
+				panic(err)
 			}
 		default:
-			log.Fatal(err)
+			panic(err)
 		}
 	}
 }

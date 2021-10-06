@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/shopspring/decimal"
 	"home-counter/src/models"
-	"log"
 )
 
 var (
@@ -30,7 +29,7 @@ func GetUserConfig (user models.UserData) (models.UserConfig, error) {
 		&userConfig.HotWaterTariff, &userConfig.OutWaterTariff, &userConfig.InternetTariff,
 		&userConfig.ElectricityTariff, &userConfig.Electricity, &userConfig.ColdWater, &userConfig.HotWater)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	if !userConfig.HotWater.Valid || !userConfig.Electricity.Valid || !userConfig.ColdWater.Valid {
 		return userConfig, configError
