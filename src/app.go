@@ -10,11 +10,22 @@ import (
 	"home-counter/src/models"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"time"
 )
 
 // TODO затащить gin
 func App() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func (c chan os.Signal) {
+		<- c
+		models.DB.Close()
+		log.Printf("DB connections closed")
+		os.Exit(0)
+	}(c)
+
 	defer func() {
 		if err := recover(); err != nil {
 			if err == config.ErrorConfig {
