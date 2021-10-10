@@ -181,19 +181,8 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	logoutUrl.Path += "/v2/logout"
 	parameters := url.Values{}
 
-	var scheme string
-	if r.TLS == nil {
-		scheme = "http"
-	} else {
-		scheme = "https"
-	}
-
-	returnTo, err := url.Parse(scheme + "://" +  r.Host)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	parameters.Add("returnTo", returnTo.String())
+	returnTo := config.Config.AppUrl
+	parameters.Add("returnTo", returnTo)
 	parameters.Add("client_id", config.Config.AuthId)
 	logoutUrl.RawQuery = parameters.Encode()
 
