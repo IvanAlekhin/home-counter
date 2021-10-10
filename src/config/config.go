@@ -14,12 +14,10 @@ type config struct {
 	DbDSN        string `env:"DbDSN,notEmpty" envDefault:"postgres://postgres:1@localhost:5432/home_counter"`
 	IsProduction bool   `env:"PRODUCTION,notEmpty"`
 	CookieSecret string `env:"COOKIE_SECRET,notEmpty"`
-	Host string `env:"HOST,notEmpty"`
+	AppUrl string `env:"APP_URL,notEmpty"`
 	AuthSecret string `env:"AUTH_SECRET,notEmpty"`
 	AuthUrl string `env:"AUTH_URL,notEmpty"`
 	AuthId string `env:"AUTH_ID,notEmpty"`
-	Secure bool `env:"SECURE,notEmpty"`
-	AppUrl string
 }
 
 func init () {
@@ -27,10 +25,5 @@ func init () {
 	if err != nil {
 		fmt.Printf("%+v\n", err)
 		panic(ErrorConfig)
-	}
-	if Config.Secure {
-		Config.AppUrl = fmt.Sprintf("https://%s:%s", Config.Host, Config.Port)
-	} else {
-		Config.AppUrl = fmt.Sprintf("http://%s:%s", Config.Host, Config.Port)
 	}
 }
