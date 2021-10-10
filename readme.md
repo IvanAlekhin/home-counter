@@ -19,4 +19,8 @@
 - /user/count-meters (GET) узнаем, сколько должны за коммуналку (параметры electricity, hot_water,
   cold_water)
 
-*Дока по работе с миграциями: https://github.com/golang-migrate/migrate/tree/master/cmd/migrate*
+*Подробная дока по работе с миграциями: https://github.com/golang-migrate/migrate/tree/master/cmd/migrate*
+Накатить новые миграции:
+`$ migrate -source file://path/to/migrations -database postgres://localhost:5432/database up`
+ Откатить последнюю миграцию
+`$ migrate -source file://path/to/migrations -database postgres://localhost:5432/database down 1`

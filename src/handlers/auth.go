@@ -162,7 +162,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	urlStruct, _ := url.Parse(urlStr)
 	q, _ := url.ParseQuery(urlStruct.RawQuery)
 	fmt.Println(q["redirect_uri"])
-	q["redirect_uri"] = []string{"http://localhost:8080/auth/callback"}
+	q["redirect_uri"] = []string{config.Config.AppUrl + "/auth/callback"}
 	urlStruct.RawQuery = q.Encode()
 
 	http.Redirect(w, r, urlStruct.String(), http.StatusTemporaryRedirect)

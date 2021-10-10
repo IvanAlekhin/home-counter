@@ -18,6 +18,6 @@ func MakeConnect () *sql.DB {
 		log.Fatal(err)
 	}
 
-	db.SetMaxOpenConns(2)
+	db.SetMaxOpenConns(1)
 	return db
 }

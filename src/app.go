@@ -74,5 +74,6 @@ func App() {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
+	log.Printf("Server is starting %s", config.Config.AppUrl)
 	log.Fatal(s.ListenAndServe())
 }
