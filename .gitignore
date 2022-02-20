@@ -19,8 +19,11 @@ _obj
 _test
 _testmain.go
 
+.env-dev
 .idea/
 .env-local
+go.mod
+go.sum
 /VERSION.cache
 /bin/
 /build.out

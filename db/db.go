@@ -18,6 +18,7 @@ func MakeConnect () *sql.DB {
 		log.Fatal(err)
 	}
 
+	db.SetConnMaxLifetime(1)
 	db.SetMaxOpenConns(1)
 	return db
 }
