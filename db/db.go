@@ -14,7 +14,8 @@ func MakeConnect() *sql.DB {
 		log.Printf("Unexpected dsn for database")
 		panic(err)
 	}
-	cfg.PreferSimpleProtocol = false
+	cfg.PreferSimpleProtocol = true
+	cfg.RuntimeParams["standard_conforming_strings"] = "on"
 
 	db, err := sql.Open("pgx", cfg.ConnString())
 	if err != nil {
@@ -26,7 +27,6 @@ func MakeConnect() *sql.DB {
 		log.Fatal(err)
 	}
 
-	db.SetConnMaxLifetime(1)
 	db.SetMaxOpenConns(1)
 	return db
 }
