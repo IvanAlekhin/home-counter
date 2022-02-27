@@ -1,14 +1,16 @@
 package db
 
 import (
-	"database/sql"
+	"context"
+	"fmt"
 	"github.com/jackc/pgx/v4"
-	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"home-counter/src/config"
 	"log"
+	"os"
 )
 
-func MakeConnect() *sql.DB {
+func MakeConnect() *pgxpool.Pool {
 	cfg, err := pgx.ParseConfig(config.Config.DbDSN)
 	if err != nil {
 		log.Printf("Unexpected dsn for database")
@@ -17,16 +19,11 @@ func MakeConnect() *sql.DB {
 	cfg.PreferSimpleProtocol = true
 	cfg.RuntimeParams["standard_conforming_strings"] = "on"
 
-	db, err := sql.Open("pgx", cfg.ConnString())
+	db, err := pgxpool.Connect(context.Background(), cfg.ConnString())
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		os.Exit(1)
 	}
 
-	err = db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	db.SetMaxOpenConns(1)
 	return db
 }

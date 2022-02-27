@@ -25,11 +25,11 @@ type Authenticator struct {
 
 func saveNewUser(userId string, userName string) {
 	var u = models.UserData{}
-	err := models.DB.QueryRow(`SELECT * FROM "user" u WHERE u.id = $1`, userId).Scan(&u.Name, &u.Id)
+	err := models.DB.QueryRow(context.Background(), `SELECT * FROM "user" u WHERE u.id = $1`, userId).Scan(&u.Name, &u.Id)
 	if err != nil {
 		switch err.Error() {
 		case "sql: no rows in result set":
-			_, err := models.DB.Exec(`INSERT INTO "user" (id, name) VALUES ($1, $2)`, userId, userName)
+			_, err := models.DB.Exec(context.Background(), `INSERT INTO "user" (id, name) VALUES ($1, $2)`, userId, userName)
 			if err != nil {
 				panic(err)
 			}
@@ -42,18 +42,18 @@ func saveNewUser(userId string, userName string) {
 func NewAuthenticator() (*Authenticator, error) {
 	ctx := context.Background()
 
-	provider, err := oidc.NewProvider(ctx, config.Config.AuthUrl + "/")
+	provider, err := oidc.NewProvider(ctx, config.Config.AuthUrl+"/")
 	if err != nil {
 		log.Printf("failed to get provider: %v", err)
 		return nil, err
 	}
 
 	conf := oauth2.Config{
-		ClientID:     config.Config.AuthId,
+		ClientID: config.Config.AuthId,
 		// fixme add env variables
 		ClientSecret: config.Config.AuthSecret,
 		RedirectURL:  config.Config.AppUrl + "/user",
-		Endpoint: 	  provider.Endpoint(),
+		Endpoint:     provider.Endpoint(),
 		Scopes:       []string{oidc.ScopeOpenID, "profile"},
 	}
 
@@ -89,7 +89,6 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		return
 	}
 
-
 	rawIDToken, ok := token.Extra("id_token").(string)
 	if !ok {
 		http.Error(w, "No id_token field in oauth2 token.", http.StatusInternalServerError)
@@ -103,7 +102,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	idToken, err := authenticator.Provider.Verifier(oidcConfig).Verify(context.TODO(), rawIDToken)
 
 	if err != nil {
-		http.Error(w, "Failed to verify ID Token: " + err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to verify ID Token: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -125,9 +124,8 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	saveNewUser(profile["sub"].(string), profile["name"].(string))
 
 	// Redirect to logged in page
-	http.Redirect(w, r, config.Config.AppUrl + "/user", http.StatusSeeOther)
+	http.Redirect(w, r, config.Config.AppUrl+"/user", http.StatusSeeOther)
 }
-
 
 func LoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Generate random state
@@ -169,7 +167,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-
 
 	logoutUrl, err := url.Parse(config.Config.AuthUrl)
 

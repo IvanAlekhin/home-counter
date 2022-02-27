@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -10,12 +11,10 @@ import (
 
 var (
 	configError = errors.New("can't find previous meters. Add it using post req /user/meters")
-	dbReqError = errors.New("something wrong with db request")
+	dbReqError  = errors.New("something wrong with db request")
 )
 
-
-
-func GetUserConfig (user models.UserData) (models.UserConfig, error) {
+func GetUserConfig(user models.UserData) (models.UserConfig, error) {
 	var q = `SELECT u.name, ut.cold_water::decimal, ut.hot_water::decimal, ut.out_water::decimal, ut.internet::decimal, 
        ut.electricity::decimal, umd.electricity as electricity_meter, umd.cold_water as cold_water_meter, 
        umd.hot_water as hot_water_meter
@@ -25,7 +24,7 @@ func GetUserConfig (user models.UserData) (models.UserConfig, error) {
 		     WHERE u.id = $1`
 	var userConfig = models.UserConfig{}
 
-	err := models.DB.QueryRow(q, user.Id).Scan(&userConfig.Name, &userConfig.ColdWaterTariff,
+	err := models.DB.QueryRow(context.Background(), q, user.Id).Scan(&userConfig.Name, &userConfig.ColdWaterTariff,
 		&userConfig.HotWaterTariff, &userConfig.OutWaterTariff, &userConfig.InternetTariff,
 		&userConfig.ElectricityTariff, &userConfig.Electricity, &userConfig.ColdWater, &userConfig.HotWater)
 	if err != nil {
@@ -37,19 +36,18 @@ func GetUserConfig (user models.UserData) (models.UserConfig, error) {
 	return userConfig, nil
 }
 
-
-func CreateOrUpdateUserMeters (user models.UserData, meters models.UserNewMetersReq) error {
+func CreateOrUpdateUserMeters(user models.UserData, meters models.UserNewMetersReq) error {
 
 	q := "UPDATE user_meter_data SET electricity=$1, cold_water=$2, hot_water=$3 WHERE user_id=$4"
 
-	res, err := models.DB.Exec(q, meters.ElectricityMeter, meters.ColdWaterMeter, meters.HotWaterMeter, user.Id)
+	res, err := models.DB.Exec(context.Background(), q, meters.ElectricityMeter, meters.ColdWaterMeter, meters.HotWaterMeter, user.Id)
 	if err != nil {
 		return dbReqError
 	}
-	n, _ := res.RowsAffected()
+	n := res.RowsAffected()
 	if n == 0 {
 		q = "INSERT INTO user_meter_data (user_id, electricity, cold_water, hot_water) VALUES ($1, $2, $3, $4)"
-		_, err = models.DB.Exec(q, user.Id, meters.ElectricityMeter, meters.ColdWaterMeter, meters.HotWaterMeter)
+		_, err = models.DB.Exec(context.Background(), q, user.Id, meters.ElectricityMeter, meters.ColdWaterMeter, meters.HotWaterMeter)
 		if err != nil {
 			return dbReqError
 		}
@@ -57,8 +55,7 @@ func CreateOrUpdateUserMeters (user models.UserData, meters models.UserNewMeters
 	return nil
 }
 
-
-func CreateOrUpdateUserTariffs (user models.UserData, tariffs models.UserTariffsRequest) error {
+func CreateOrUpdateUserTariffs(user models.UserData, tariffs models.UserTariffsRequest) error {
 	var getQ = `SELECT user_id FROM user_tariff WHERE user_id = $1`
 	var updateQ = `UPDATE user_tariff 
                     SET electricity=$2, cold_water=$3, hot_water=$4, out_water=$5, internet=$6
@@ -68,7 +65,7 @@ func CreateOrUpdateUserTariffs (user models.UserData, tariffs models.UserTariffs
 	var q string
 	var userId string
 
-	dbErr := models.DB.QueryRow(getQ, user.Id).Scan(&userId)
+	dbErr := models.DB.QueryRow(context.Background(), getQ, user.Id).Scan(&userId)
 	if dbErr != nil {
 		switch dbErr {
 		case sql.ErrNoRows:
@@ -80,7 +77,7 @@ func CreateOrUpdateUserTariffs (user models.UserData, tariffs models.UserTariffs
 		q = updateQ
 	}
 
-	_, err := models.DB.Exec(q, user.Id, tariffs.ElectricityTariff, tariffs.ColdWaterTariff, tariffs.HotWaterTariff,
+	_, err := models.DB.Exec(context.Background(), q, user.Id, tariffs.ElectricityTariff, tariffs.ColdWaterTariff, tariffs.HotWaterTariff,
 		tariffs.OutWaterTariff, tariffs.InternetTariff)
 
 	if err != nil {
@@ -90,8 +87,7 @@ func CreateOrUpdateUserTariffs (user models.UserData, tariffs models.UserTariffs
 	return nil
 }
 
-
-func CountUserPayment (user models.UserData, meters models.UserNewMetersReq) (string, error) {
+func CountUserPayment(user models.UserData, meters models.UserNewMetersReq) (string, error) {
 	// берем данные из запроса (помним про валидацию)
 	userConfig, err := GetUserConfig(user)
 
@@ -111,10 +107,10 @@ func CountUserPayment (user models.UserData, meters models.UserNewMetersReq) (st
 	return res, nil
 }
 
-func Counting (newMeters models.UserNewMetersReq, userConfig models.UserConfig) string {
+func Counting(newMeters models.UserNewMetersReq, userConfig models.UserConfig) string {
 	electricity := int64(*newMeters.ElectricityMeter) - userConfig.Electricity.Int64
 	hotWater := int64(*newMeters.HotWaterMeter) - userConfig.HotWater.Int64
-	coldWater :=  int64(*newMeters.ColdWaterMeter) - userConfig.ColdWater.Int64
+	coldWater := int64(*newMeters.ColdWaterMeter) - userConfig.ColdWater.Int64
 	outWater := hotWater + coldWater
 
 	result := decimal.NewFromFloat(userConfig.ElectricityTariff.Float64).Mul(decimal.NewFromInt(electricity)).Add(
