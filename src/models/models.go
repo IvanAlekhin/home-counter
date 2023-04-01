@@ -10,7 +10,7 @@ import (
 
 var (
 	Store = sessions.NewCookieStore([]byte(config.Config.CookieSecret))
-	DB    = db.MakeConnect()
+	DB    = db.MakeSingleConnect
 )
 
 func init() {

@@ -17,6 +17,8 @@ import (
 	oidc "github.com/coreos/go-oidc"
 )
 
+// auth файл не используется, РФ забанили в этом сервисе
+
 type Authenticator struct {
 	Provider *oidc.Provider
 	Config   oauth2.Config
@@ -25,11 +27,14 @@ type Authenticator struct {
 
 func saveNewUser(userId string, userName string) {
 	var u = models.UserData{}
-	err := models.DB.QueryRow(context.Background(), `SELECT * FROM "user" u WHERE u.id = $1`, userId).Scan(&u.Name, &u.Id)
+
+	conn := models.DB()
+	defer conn.Close(context.Background())
+	err := conn.QueryRow(context.Background(), `SELECT * FROM "user" u WHERE u.id = $1`, userId).Scan(&u.Name, &u.Id)
 	if err != nil {
 		switch err.Error() {
 		case "sql: no rows in result set":
-			_, err := models.DB.Exec(context.Background(), `INSERT INTO "user" (id, name) VALUES ($1, $2)`, userId, userName)
+			_, err := conn.Exec(context.Background(), `INSERT INTO "user" (id, name) VALUES ($1, $2)`, userId, userName)
 			if err != nil {
 				panic(err)
 			}

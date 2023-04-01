@@ -24,7 +24,9 @@ func GetUserConfig(user models.UserData) (models.UserConfig, error) {
 		     WHERE u.id = $1`
 	var userConfig = models.UserConfig{}
 
-	err := models.DB.QueryRow(context.Background(), q, user.Id).Scan(&userConfig.Name, &userConfig.ColdWaterTariff,
+	conn := models.DB()
+	defer conn.Close(context.Background())
+	err := conn.QueryRow(context.Background(), q, user.Id).Scan(&userConfig.Name, &userConfig.ColdWaterTariff,
 		&userConfig.HotWaterTariff, &userConfig.OutWaterTariff, &userConfig.InternetTariff,
 		&userConfig.ElectricityTariff, &userConfig.Electricity, &userConfig.ColdWater, &userConfig.HotWater)
 	if err != nil {
@@ -40,14 +42,17 @@ func CreateOrUpdateUserMeters(user models.UserData, meters models.UserNewMetersR
 
 	q := "UPDATE user_meter_data SET electricity=$1, cold_water=$2, hot_water=$3 WHERE user_id=$4"
 
-	res, err := models.DB.Exec(context.Background(), q, meters.ElectricityMeter, meters.ColdWaterMeter, meters.HotWaterMeter, user.Id)
+	conn := models.DB()
+	defer conn.Close(context.Background())
+	res, err := conn.Exec(context.Background(), q, meters.ElectricityMeter, meters.ColdWaterMeter, meters.HotWaterMeter, user.Id)
 	if err != nil {
 		return dbReqError
 	}
 	n := res.RowsAffected()
 	if n == 0 {
+		conn := models.DB()
 		q = "INSERT INTO user_meter_data (user_id, electricity, cold_water, hot_water) VALUES ($1, $2, $3, $4)"
-		_, err = models.DB.Exec(context.Background(), q, user.Id, meters.ElectricityMeter, meters.ColdWaterMeter, meters.HotWaterMeter)
+		_, err = conn.Exec(context.Background(), q, user.Id, meters.ElectricityMeter, meters.ColdWaterMeter, meters.HotWaterMeter)
 		if err != nil {
 			return dbReqError
 		}
@@ -65,7 +70,9 @@ func CreateOrUpdateUserTariffs(user models.UserData, tariffs models.UserTariffsR
 	var q string
 	var userId string
 
-	dbErr := models.DB.QueryRow(context.Background(), getQ, user.Id).Scan(&userId)
+	conn := models.DB()
+	defer conn.Close(context.Background())
+	dbErr := conn.QueryRow(context.Background(), getQ, user.Id).Scan(&userId)
 	if dbErr != nil {
 		switch dbErr {
 		case sql.ErrNoRows:
@@ -77,7 +84,7 @@ func CreateOrUpdateUserTariffs(user models.UserData, tariffs models.UserTariffsR
 		q = updateQ
 	}
 
-	_, err := models.DB.Exec(context.Background(), q, user.Id, tariffs.ElectricityTariff, tariffs.ColdWaterTariff, tariffs.HotWaterTariff,
+	_, err := conn.Exec(context.Background(), q, user.Id, tariffs.ElectricityTariff, tariffs.ColdWaterTariff, tariffs.HotWaterTariff,
 		tariffs.OutWaterTariff, tariffs.InternetTariff)
 
 	if err != nil {

@@ -7,7 +7,6 @@ import (
 	"home-counter/src/config"
 	"home-counter/src/handlers"
 	"home-counter/src/middlewares"
-	"home-counter/src/models"
 	"log"
 	"net/http"
 	"os"
@@ -19,12 +18,12 @@ import (
 func App() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
-	go func (c chan os.Signal) {
-		<- c
-		models.DB.Close()
-		log.Printf("DB connections closed")
-		os.Exit(0)
-	}(c)
+	//go func (c chan os.Signal) {
+	//	<- c
+	//	models.DB.Close()
+	//	log.Printf("DB connections closed")
+	//	os.Exit(0)
+	//}(c)
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -38,7 +37,7 @@ func App() {
 	}()
 
 	defer func() {
-		models.DB.Close()
+		// тут можно массово закрывать коннекты
 		log.Printf("DB connections closed")
 	}()
 
