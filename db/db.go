@@ -29,13 +29,8 @@ import (
 //}
 
 func MakeSingleConnect() *pgx.Conn {
-	conn, err := pgx.Connect(context.Background(), config.Config.DbDSN)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
-	}
 
-	// кажется, что лишнее, но на всякий случай оставлю (иначе передвинь вверх)
+	// кажется, что работа с конфигом лишняя, но на всякий случай оставлю
 	cfg, err2 := pgx.ParseConfig(config.Config.DbDSN)
 	if err2 != nil {
 		log.Printf("Unexpected dsn for database")
@@ -43,6 +38,12 @@ func MakeSingleConnect() *pgx.Conn {
 	}
 	cfg.PreferSimpleProtocol = true
 	cfg.RuntimeParams["standard_conforming_strings"] = "on"
+
+	conn, err := pgx.ConnectConfig(context.Background(), cfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		os.Exit(1)
+	}
 
 	return conn
 }
